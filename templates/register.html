@@ -1,0 +1,173 @@
+{% extends "base.html" %}
+
+{% block title %}Register - MDB.AI Filtering Tool{% endblock %}
+
+{% block content %}
+<style>
+    /* Full-bleed adjustment for the two-column look */
+    .register-wrapper {
+        margin: -40px; /* Counteracts base.html padding */
+        display: flex;
+        min-height: 80vh;
+        overflow: hidden;
+        border-radius: 24px;
+    }
+
+    /* Left Side: Branding & Info */
+    .register-info-panel {
+        flex: 1;
+        background: linear-gradient(135deg, #121212 0%, #1a1a1a 100%);
+        color: white;
+        padding: 60px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        position: relative;
+    }
+
+    .register-info-panel::after {
+        content: "";
+        position: absolute;
+        bottom: -10%;
+        right: -10%;
+        width: 300px;
+        height: 300px;
+        background: radial-gradient(circle, rgba(0, 212, 180, 0.1) 0%, transparent 70%);
+        pointer-events: none;
+    }
+
+    /* Right Side: Form */
+    .register-form-panel {
+        flex: 1.2;
+        background: white;
+        padding: 60px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+    }
+
+    .feature-item {
+        display: flex;
+        align-items: center;
+        margin-bottom: 25px;
+        background: rgba(255,255,255,0.05);
+        padding: 15px;
+        border-radius: 15px;
+        border: 1px solid rgba(255,255,255,0.1);
+    }
+
+    .feature-icon {
+        width: 45px;
+        height: 45px;
+        background: var(--primary-color);
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 15px;
+        color: #121212;
+    }
+
+    @media (max-width: 992px) {
+        .register-wrapper { flex-direction: column; margin: -20px; }
+        .register-info-panel { padding: 40px; }
+    }
+</style>
+
+<div class="register-wrapper">
+    <div class="register-info-panel d-none d-lg-flex">
+        <h1 class="display-5 fw-bold mb-4">Join the <span style="color: var(--primary-color);">Future</span> of Moderation.</h1>
+        <p class="text-white mb-5">Create your account to access high-speed AI filtering tools designed specifically for Virtual University MDBs.</p>
+        
+        <div class="feature-item">
+            <div class="feature-icon"><i class="fas fa-shield-halved"></i></div>
+            <div>
+                <h6 class="mb-0 fw-bold">Hybrid Accuracy</h6>
+                <small class="opacity-75">NLP & Regex working together.</small>
+            </div>
+        </div>
+
+        <div class="feature-item">
+            <div class="feature-icon"><i class="fas fa-bolt"></i></div>
+            <div>
+                <h6 class="mb-0 fw-bold">Instant Cleanup</h6>
+                <small class="opacity-75">Remove "Done" and "Thank you" clutter.</small>
+            </div>
+        </div>
+
+        <div class="feature-item">
+            <div class="feature-icon"><i class="fas fa-user-graduate"></i></div>
+            <div>
+                <h6 class="mb-0 fw-bold">Academic Focus</h6>
+                <small class="opacity-75">Identify genuine student queries.</small>
+            </div>
+        </div>
+    </div>
+
+    <div class="register-form-panel">
+        <div class="mb-4">
+            <h2 class="fw-bold">Create Account</h2>
+            <p class="text-muted">Start your journey with MDB.AI</p>
+        </div>
+
+        {% if form.errors %}
+        <div class="alert alert-danger border-0 rounded-4 mb-4">
+            <ul class="mb-0 small">
+                {% for field in form %}{% for error in field.errors %}<li>{{ field.label }}: {{ error }}</li>{% endfor %}{% endfor %}
+                {% for error in form.non_field_errors %}<li>{{ error }}</li>{% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+
+        <form method="post" class="row g-3">
+            {% csrf_token %}
+            
+            <div class="col-md-6">
+                <label class="form-label small fw-bold text-uppercase">Full Name</label>
+                <input type="text" name="{{ form.full_name.name }}" class="form-control" placeholder="John Doe" required>
+            </div>
+
+            <div class="col-md-6"> 
+                <label class="form-label small fw-bold text-uppercase">Email Address</label>
+                <input type="email" name="{{ form.email.name }}" class="form-control" placeholder="name@email.com" required>
+            </div>
+
+            <div class="col-md-6">
+                <label class="form-label small fw-bold text-uppercase">Password</label>
+                <input type="password" name="{{ form.password.name }}" class="form-control" placeholder="••••••••" required>
+            </div>
+
+            <div class="col-md-6">
+                <label class="form-label small fw-bold text-uppercase">Phone</label>
+                <input type="text" name="{{ form.phone.name }}" class="form-control" placeholder="+92 ...">
+            </div>
+
+            <div class="col-md-6">
+                <label class="form-label small fw-bold text-uppercase">Platform Role</label>
+                <select name="{{ form.role.name }}" class="form-select form-control" required>
+                    {% for value, label in form.fields.role.choices %}
+                        <option value="{{ value }}">{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="col-md-6">
+                <label class="form-label small fw-bold text-uppercase">Gender</label>
+                <select name="{{ form.gender.name }}" class="form-select form-control" required>
+                    {% for value, label in form.fields.gender.choices %}
+                        <option value="{{ value }}">{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="col-12 mt-4">
+                <button type="submit" class="btn btn-primary btn-lg w-100 py-3 shadow">Create My Account</button>
+            </div>
+
+            <div class="col-12 text-center mt-4">
+                <p class="text-muted small">Already registered? <a href="{% url 'login' %}" class="text-primary fw-bold text-decoration-none">Sign In</a></p>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

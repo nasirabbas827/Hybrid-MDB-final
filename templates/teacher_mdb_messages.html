@@ -1,0 +1,149 @@
+{% extends "base.html" %}
+{% block title %}Teacher – MDB Moderation Queue{% endblock %}
+
+{% block content %}
+<style>
+    .moderation-card {
+        background: white;
+        border-radius: 12px;
+        border-left: 5px solid #dee2e6;
+        transition: all 0.2s;
+    }
+    .moderation-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+    .status-academic { border-left-color: #2ecc71; }
+    .status-non_academic { border-left-color: #e74c3c; }
+    
+    .filter-section {
+        background: #f8f9fa;
+        border-radius: 16px;
+        padding: 20px;
+        border: 1px solid #e9ecef;
+    }
+    .source-pill {
+        font-size: 0.7rem;
+        font-weight: 700;
+        padding: 2px 8px;
+        border-radius: 4px;
+        text-transform: uppercase;
+        background: #eee;
+        color: #666;
+    }
+    .action-btn {
+        width: 35px;
+        height: 35px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 8px;
+        transition: 0.2s;
+    }
+</style>
+
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-end mb-4">
+        <div>
+            <h2 class="fw-bold mb-0">Moderation Queue</h2>
+            <p class="text-muted small mb-0">Review and refine filtered student discussions</p>
+        </div>
+        <div class="text-end">
+            <span class="badge bg-primary rounded-pill px-3">{{ total_messages }} Total</span>
+        </div>
+    </div>
+
+    <div class="filter-section mb-5 shadow-sm">
+        <form method="post" class="row g-3">
+            {% csrf_token %}
+            <div class="col-md-4">
+                <label class="form-label small fw-bold text-muted">Search Content</label>
+                <div class="input-group">
+                    <span class="input-group-text bg-white border-end-0"><i class="bi bi-search"></i></span>
+                    <input type="text" name="q" class="form-control border-start-0" placeholder="Keywords, student ID..." value="{{ query }}">
+                </div>
+            </div>
+
+            <div class="col-md-3">
+                <label class="form-label small fw-bold text-muted">Filter Engine</label>
+                <select name="mode" class="form-select">
+                    <option value="ai" {% if mode == 'ai' %}selected{% endif %}>
+                         AI Hybrid Classifier
+                    </option>
+                    <option value="keyword" {% if mode == 'keyword' %}selected{% endif %}>
+                         Regex Keyword Matcher
+                    </option>
+                </select>
+            </div>
+
+            <div class="col-md-5 d-flex align-items-end gap-2">
+                <button type="submit" class="btn btn-dark px-4 flex-grow-1">
+                    Apply Filter
+                </button>
+                <a href="{% url 'teacher_mdb_messages_export_csv' %}?q={{ query|urlencode }}&mode={{ mode|urlencode }}"
+                   class="btn btn-outline-success px-4">
+                    <i class="bi bi-file-earmark-spreadsheet me-1"></i> Export
+                </a>
+            </div>
+        </form>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            {% for row in messages_data %}
+            <div class="card moderation-card mb-3 p-3 shadow-sm {% if row.selected_label == 'academic' %}status-academic{% elif row.selected_label == 'non_academic' %}status-non_academic{% endif %}">
+                <div class="row align-items-center">
+                    <div class="col-md-2 text-center border-end">
+                        <div class="text-muted small mb-1">ID #{{ row.msg.id }}</div>
+                        {% if row.selected_label == 'academic' %}
+                            <span class="badge bg-success-subtle text-success border border-success-subtle">ACADEMIC</span>
+                        {% elif row.selected_label == 'non_academic' %}
+                            <span class="badge bg-danger-subtle text-danger border border-danger-subtle">NON-ACADEMIC</span>
+                        {% else %}
+                            <span class="badge bg-secondary">UNLABELED</span>
+                        {% endif %}
+                        <div class="mt-2">
+                            <span class="source-pill">via {{ mode|upper }}</span>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6 px-4">
+                        <div class="d-flex justify-content-between mb-1">
+                            <span class="fw-bold small">{{ row.msg.posted_by.full_name|default:"Unknown Student" }}</span>
+                            <span class="text-muted" style="font-size: 0.75rem;">{{ row.msg.created_at|date:"d M, H:i" }}</span>
+                        </div>
+                        <p class="mb-0 text-dark small">{{ row.msg.content }}</p>
+                    </div>
+
+
+                </div>
+            </div>
+            {% empty %}
+            <div class="text-center py-5">
+                <img src="https://cdn-icons-png.flaticon.com/512/7486/7486744.png" width="80" class="opacity-25 mb-3" alt="Empty">
+                <p class="text-muted">No messages match your criteria.</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    {% if page_obj.has_other_pages %}
+    <nav class="mt-5">
+        <ul class="pagination justify-content-center">
+            {% if page_obj.has_previous %}
+                <li class="page-item"><a class="page-link border-0" href="?page={{ page_obj.previous_page_number }}&q={{ query }}&mode={{ mode }}">Previous</a></li>
+            {% endif %}
+            
+            {% for num in page_obj.paginator.page_range %}
+                <li class="page-item {% if page_obj.number == num %}active{% endif %}">
+                    <a class="page-link rounded-circle mx-1 border-0" href="?page={{ num }}&q={{ query }}&mode={{ mode }}">{{ num }}</a>
+                </li>
+            {% endfor %}
+
+            {% if page_obj.has_next %}
+                <li class="page-item"><a class="page-link border-0" href="?page={{ page_obj.next_page_number }}&q={{ query }}&mode={{ mode }}">Next</a></li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+</div>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+{% endblock %}

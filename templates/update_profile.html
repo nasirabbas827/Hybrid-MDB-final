@@ -1,0 +1,173 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Update Profile - MDB.AI{% endblock %}
+
+{% block content %}
+<style>
+    /* Full-bleed adjustment to match Auth pages */
+    .profile-wrapper {
+        margin: -40px; 
+        display: flex;
+        min-height: 85vh;
+        overflow: hidden;
+        border-radius: 24px;
+    }
+
+    /* Left Side: Identity Panel (Dark) */
+    .profile-info-panel {
+        flex: 1;
+        background: linear-gradient(135deg, #121212 0%, #1a1a1a 100%);
+        color: white;
+        padding: 60px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        position: relative;
+    }
+
+    .profile-info-panel::after {
+        content: "";
+        position: absolute;
+        bottom: -5%;
+        left: -5%;
+        width: 250px;
+        height: 250px;
+        background: radial-gradient(circle, rgba(0, 212, 180, 0.1) 0%, transparent 70%);
+        pointer-events: none;
+    }
+
+    .avatar-container {
+        width: 160px;
+        height: 160px;
+        border-radius: 50%;
+        overflow: hidden;
+        border: 4px solid var(--primary-color);
+        box-shadow: 0 0 30px rgba(0, 212, 180, 0.2);
+        margin-bottom: 25px;
+        background: #222;
+    }
+
+    /* Right Side: Form Panel (Light) */
+    .profile-form-panel {
+        flex: 1.5;
+        background: white;
+        padding: 60px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+    }
+
+    /* Styling Django's generated form fields */
+    .profile-form-panel input, 
+    .profile-form-panel select, 
+    .profile-form-panel textarea {
+        display: block;
+        width: 100%;
+        padding: 0.75rem 1rem;
+        border: 1px solid #dee2e6;
+        border-radius: 12px;
+        margin-top: 5px;
+        background-color: #f8f9fa;
+    }
+
+    .profile-form-panel input:focus {
+        border-color: var(--primary-color);
+        outline: none;
+        background-color: #fff;
+    }
+
+    @media (max-width: 992px) {
+        .profile-wrapper { flex-direction: column; margin: -20px; }
+        .profile-info-panel { padding: 40px; }
+    }
+</style>
+
+<div class="profile-wrapper">
+    <div class="profile-info-panel d-none d-lg-flex">
+        <div class="avatar-container">
+            {% if user.profile_picture %}
+                <img src="{{ user.profile_picture.url }}" alt="Profile" style="width:100%; height:100%; object-fit:cover;">
+            {% else %}
+                <img src="{% static 'images/default-avatar.png' %}" alt="Default" style="width:100%; height:100%; object-fit:cover;">
+            {% endif %}
+        </div>
+        
+        <h3 class="fw-bold mb-1">{{ user.full_name }}</h3>
+        <span class="badge rounded-pill mb-4" style="background: rgba(0, 212, 180, 0.2); color: var(--primary-color); border: 1px solid rgba(0, 212, 180, 0.3);">
+            {{ user.role|upper }}
+        </span>
+        
+        <div class="mt-4 px-4">
+            <h6 class="text-uppercase small fw-bold text-muted mb-2">Public Bio</h6>
+            <p class="small opacity-75 italic">
+                "{{ user.bio|default:'Update your bio to let students and colleagues know more about your academic goals.' }}"
+            </p>
+        </div>
+
+ 
+    </div>
+
+    <div class="profile-form-panel">
+        <div class="mb-4">
+            <h2 class="fw-bold">Profile Settings</h2>
+            <p class="text-muted">Update your personal and professional details below.</p>
+        </div>
+
+        <form method="post" enctype="multipart/form-data" class="row g-3">
+            {% csrf_token %}
+
+            <div class="col-md-6">
+                <label class="form-label small fw-bold text-uppercase">Full Name</label>
+                {{ form.full_name }}
+                <div class="text-danger small">{{ form.full_name.errors }}</div>
+            </div>
+
+            <div class="col-md-6">
+                <label class="form-label small fw-bold text-uppercase">Email Address</label>
+                {{ form.email }}
+                <div class="text-danger small">{{ form.email.errors }}</div>
+            </div>
+
+            <div class="col-md-6">
+                <label class="form-label small fw-bold text-uppercase">Gender</label>
+                {{ form.gender }}
+            </div>
+
+            <div class="col-md-6">
+                <label class="form-label small fw-bold text-uppercase">Date of Birth</label>
+                {{ form.dob }}
+            </div>
+
+            <div class="col-md-6">
+                <label class="form-label small fw-bold text-uppercase">Phone Number</label>
+                {{ form.phone }}
+            </div>
+
+            <div class="col-md-6">
+                <label class="form-label small fw-bold text-uppercase">Location (City)</label>
+                {{ form.city }}
+            </div>
+
+            <div class="col-12">
+                <label class="form-label small fw-bold text-uppercase">Profile Picture</label>
+                {{ form.profile_picture }}
+                <small class="text-muted d-block mt-1">Upload a professional photo for your MDB identification.</small>
+            </div>
+
+            <div class="col-12">
+                <label class="form-label small fw-bold text-uppercase">About Me (Bio)</label>
+                {{ form.bio }}
+            </div>
+
+            <div class="col-12 mt-4">
+                <button type="submit" class="btn btn-primary btn-lg w-100 py-3 shadow-sm fw-bold">
+                    Update My Profile
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

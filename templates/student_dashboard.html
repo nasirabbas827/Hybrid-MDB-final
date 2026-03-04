@@ -1,0 +1,119 @@
+{% extends "base.html" %}
+{% block title %}Student Hub - MDB Discussion Board{% endblock %}
+
+{% block content %}
+<style>
+    /* LMS Style Overrides */
+    .mdb-container {
+        background: #fff;
+        border-radius: 12px;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+        overflow: hidden;
+    }
+    .mdb-header {
+        background: #f8f9fa;
+        padding: 20px;
+        border-bottom: 2px solid #eee;
+    }
+    .post-card {
+        border-left: 4px solid #dee2e6;
+        transition: 0.2s;
+        margin-bottom: 15px;
+        background: white;
+        border-radius: 0 8px 8px 0;
+    }
+    .post-card.academic { border-left-color: var(--primary-color); }
+    .post-card.non-academic { border-left-color: #ff7675; opacity: 0.8; }
+    
+    .user-avatar {
+        width: 45px;
+        height: 45px;
+        background: #e9ecef;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        color: #636e72;
+    }
+    .stats-pill {
+        background: rgba(0, 212, 180, 0.1);
+        color: var(--primary-dark);
+        padding: 5px 15px;
+        border-radius: 50px;
+        font-size: 0.85rem;
+        font-weight: 600;
+    }
+    .badge-label { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.5px; }
+</style>
+
+<div class="container py-2">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold mb-0">CS619: Moderated Discussion Board</h2>
+            <p class="text-muted">Welcome back, <strong>{{ full_name }}</strong></p>
+        </div>
+        <div class="stats-pill">
+            <i class="fas fa-comments me-2"></i> {{ total_messages }} Posts
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-lg-8">
+            <h5 class="mb-3 fw-bold"><i class="fas fa-stream me-2 text-primary"></i>Recent Discussions</h5>
+            
+            <div class="mdb-threads">
+                {% for msg in messages_list %}
+                <div class="card post-card p-3 shadow-sm {% if msg.is_academic %}academic{% else %}non-academic{% endif %}">
+                    <div class="d-flex align-items-start">
+                        <div class="user-avatar me-3">
+                            {{ full_name|slice:":1"|upper }}
+                        </div>
+                        <div class="flex-grow-1">
+                            <div class="d-flex justify-content-between">
+                                <h6 class="mb-1 fw-bold">{{ full_name }} <span class="text-muted fw-normal small">@student</span></h6>
+                                <small class="text-muted">{{ msg.created_at|date:"M d, H:i" }}</small>
+                            </div>
+                            
+                            <p class="mb-2 text-dark">{{ msg.content }}</p>
+                            
+                        </div>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="text-center py-5 mdb-container">
+                    <i class="fas fa-feather-alt fa-3x text-light mb-3"></i>
+                    <p class="text-muted">The discussion hasn't started yet. Be the first to post!</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="sticky-top" style="top: 100px;">
+                <div class="card border-0 shadow-sm p-4" style="border-radius: 16px;">
+                    <h5 class="fw-bold mb-3"><i class="fas fa-pen-fancy me-2"></i>New Post</h5>
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label class="form-label small text-muted">Message Content</label>
+                            {{ form.content }} 
+                            {% if not form.content %}
+                                <textarea name="content" class="form-control" rows="4" placeholder="Type your question or academic response here..."></textarea>
+                            {% endif %}
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100 py-2">
+                            <i class="fas fa-paper-plane me-2"></i> Post to MDB
+                        </button>
+                    </form>
+                    <hr>
+                    <div class="small text-muted">
+                        <i class="fas fa-info-circle me-1"></i> 
+                        Your message will be automatically classified by our AI to maintain academic quality.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

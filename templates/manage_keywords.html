@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+{% block title %}Settings | Manage Global Keywords{% endblock %}
+
+{% block content %}
+<style>
+    .keyword-card {
+        background: white;
+        border-radius: 20px;
+        padding: 30px;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+        height: 100%;
+        border-top: 5px solid transparent;
+    }
+    .card-academic { border-top-color: var(--primary-color); }
+    .card-non-academic { border-top-color: #ff7675; }
+
+    .tag-cloud {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-top: 15px;
+    }
+    .badge-keyword {
+        padding: 6px 12px;
+        border-radius: 8px;
+        font-weight: 500;
+        font-size: 0.8rem;
+        display: flex;
+        align-items: center;
+    }
+    .badge-academic { background: #e0f9f5; color: #00b89a; border: 1px solid #00d4b4; }
+    .badge-non-academic { background: #fff5f5; color: #d63031; border: 1px solid #ff7675; }
+    
+    .keyword-input {
+        background: #f8f9fa;
+        border: 2px solid #eee;
+        border-radius: 12px;
+        padding: 15px;
+        transition: 0.3s;
+    }
+    .keyword-input:focus {
+        background: #fff;
+        border-color: var(--primary-color);
+        box-shadow: 0 0 0 0.25 million rgba(0, 212, 180, 0.1);
+    }
+</style>
+
+<div class="container py-4">
+    <div class="row mb-5">
+        <div class="col-lg-8">
+            <h2 class="fw-bold"><i class="fas fa-tags me-2 text-primary"></i>Keyword Configuration</h2>
+            <p class="text-muted">Fine-tune the <strong>Regex-based filtering</strong> engine. Keywords added here will override the AI classifier for immediate flagging.</p>
+        </div>
+        
+    </div>
+
+    <form method="post">
+        {% csrf_token %}
+        <div class="row g-4">
+            <div class="col-md-6">
+                <div class="keyword-card card-academic">
+                    <h5 class="fw-bold mb-3"><i class="fas fa-graduation-cap me-2 text-success"></i>Academic Whitelist</h5>
+                    <p class="small text-muted mb-4">Terms that indicate valid academic inquiry. Messages containing these will likely bypass the spam filter.</p>
+                    
+                    <div class="mb-4">
+                        {{ form.academic_keywords }}
+                        {% if not form.academic_keywords %}
+                            <textarea name="academic_keywords" class="form-control keyword-input" rows="5" placeholder="assignment, mid-term, quiz, deadline, solution..."></textarea>
+                        {% endif %}
+                        <div class="form-text mt-2"><i class="fas fa-info-circle me-1"></i> Separate keywords with commas.</div>
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="keyword-card card-non-academic">
+                    <h5 class="fw-bold mb-3"><i class="fas fa-ban me-2 text-danger"></i>Non-Academic Blacklist</h5>
+                    <p class="small text-muted mb-4">Common clutter or non-academic terms (e.g., greetings, contact sharing) that should be flagged immediately.</p>
+                    
+                    <div class="mb-4">
+                        {{ form.non_academic_keywords }}
+                        {% if not form.non_academic_keywords %}
+                            <textarea name="non_academic_keywords" class="form-control keyword-input" rows="5" placeholder="whatsapp, good, done, present, subscribe..."></textarea>
+                        {% endif %}
+                        <div class="form-text mt-2"><i class="fas fa-info-circle me-1"></i> Supports simple text or regex patterns.</div>
+                    </div>
+
+
+                </div>
+            </div>
+        </div>
+
+        <div class="row mt-5">
+            <div class="col-12">
+                <div class="card p-4 border-0 shadow-sm text-center">
+                    <p class="text-muted small"><i class="fas fa-lightbulb me-2 text-warning"></i><strong>Pro-tip:</strong> Be specific. Using too many short keywords (like "hi") may cause false positives in longer academic words (like "history").</p>
+                    <button type="submit" class="btn btn-primary btn-lg px-5 rounded-pill shadow">
+                        <i class="fas fa-save me-2"></i> Update Global Filter Logic
+                    </button>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+{% endblock %}

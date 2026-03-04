@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}MDB Filter | Academic Tool{% endblock %}</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+
+    <style>
+        :root {
+            --primary-color: #00d4b4;
+            --primary-dark: #00b89a;
+            --bg-gradient: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            --glass-bg: rgba(255, 255, 255, 0.85);
+            --dark-surface: #121212;
+            --text-main: #2d3436;
+        }
+
+        body {
+            background: var(--bg-gradient);
+            background-attachment: fixed;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Modern Navigation */
+        .navbar {
+            background: rgba(18, 18, 18, 0.95) !important;
+            backdrop-filter: blur(10px);
+            padding: 1rem 0;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .navbar-brand {
+            font-weight: 700;
+            letter-spacing: -1px;
+            font-size: 1.5rem;
+            background: linear-gradient(to right, #ffffff, var(--primary-color));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .nav-link {
+            font-weight: 500;
+            margin: 0 5px;
+            transition: 0.3s all cubic-bezier(0.4, 0, 0.2, 1);
+            opacity: 0.8;
+            color: #fff !important;
+        }
+
+        .nav-link:hover {
+            color: var(--primary-color) !important;
+            opacity: 1;
+            transform: translateY(-1px);
+        }
+
+        /* Glassmorphism Container */
+        .content-container {
+            margin: 40px auto;
+            max-width: 1240px;
+            padding: 40px;
+            backdrop-filter: blur(12px);
+            border-radius: 24px;
+            flex: 1;
+        }
+
+        /* Buttons */
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+            border: none;
+            border-radius: 12px;
+            font-weight: 600;
+            padding: 10px 24px;
+            box-shadow: 0 4px 15px rgba(0, 212, 180, 0.3);
+            transition: 0.3s;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0, 212, 180, 0.4);
+            filter: brightness(1.1);
+            color: white;
+        }
+
+        /* Messages */
+        .messages-wrapper {
+            max-width: 1240px;
+            margin: 20px auto 0;
+            padding: 0 20px;
+        }
+
+        .alert {
+            border: none;
+            border-radius: 16px;
+            padding: 16px 24px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            animation: slideIn 0.4s ease-out;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateY(-20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        footer {
+            background: var(--dark-surface);
+            color: #888;
+            padding: 60px 0 30px;
+            margin-top: 60px;
+        }
+
+        .social-icons a {
+            width: 40px; height: 40px;
+            display: inline-flex; align-items: center; justify-content: center;
+            background: rgba(255,255,255,0.05);
+            border-radius: 10px; color: #fff; margin-right: 8px; transition: 0.3s;
+        }
+
+        .social-icons a:hover {
+            background: var(--primary-color); transform: translateY(-3px);
+        }
+    </style>
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-dark sticky-top">
+    <div class="container">
+        <a class="navbar-brand" href="{% url 'index' %}">
+            <i class="fas fa-microchip me-2"></i>MDB.AI
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav ms-auto align-items-center">
+                {% if request.session.user_id %}
+                    {% if request.session.user_role == 'teacher' %}
+                        <li class="nav-item"><a class="nav-link" href="{% url 'teacher_dashboard' %}">Faculty Portal</a></li>
+                        <li class="nav-item"><a class="nav-link" href="{% url 'mdb_message' %}">MDB Message</a></li>
+                        <li class="nav-item"><a class="nav-link" href="{% url 'manage_keywords' %}">Manage Keywords</a></li>
+                    {% elif request.session.user_role == 'student' %}
+                        <li class="nav-item"><a class="nav-link" href="{% url 'student_dashboard' %}">Student Portal</a></li>
+                    {% endif %}
+                    
+                    <li class="nav-item"><a class="nav-link" href="{% url 'update_profile' %}">Profile</a></li>
+                    <li class="nav-item ms-lg-3">
+                        <a class="btn btn-outline-light btn-sm px-4 rounded-pill" href="{% url 'logout' %}">Logout</a>
+                    </li>
+                {% else %}
+                    <li class="nav-item"><a class="nav-link" href="{% url 'index' %}">Home</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{% url 'login' %}">Sign In</a></li>
+                    <li class="nav-item ms-lg-3">
+                        <a class="btn btn-primary px-4 rounded-pill" href="{% url 'register' %}">Get Started</a>
+                    </li>
+                {% endif %}
+            </ul>
+        </div>
+    </div>
+</nav>
+
+{% if messages %}
+<div class="messages-wrapper">
+    {% for message in messages %}
+    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+        <i class="fas {% if message.tags == 'success' %}fa-check-circle{% else %}fa-exclamation-circle{% endif %} me-2"></i>
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+<main class="container">
+    <div class="content-container">
+        {% block content %}{% endblock %}
+    </div>
+</main>
+
+<footer>
+    <div class="container">
+        <div class="row g-4 text-center text-lg-start">
+            <div class="col-lg-5">
+                <h5 class="text-white">MDB Filtering Tool</h5>
+                <p>Developing an intelligent ecosystem for Virtual University's Moderated Discussion Boards using hybrid NLP classification.</p>
+                <div class="social-icons">
+                    <a href="#"><i class="fab fa-github"></i></a>
+                    <a href="#"><i class="fab fa-linkedin-in"></i></a>
+                </div>
+            </div>
+            <div class="col-lg-3">
+                <h5 class="text-white">Navigation</h5>
+                <ul class="list-unstyled">
+                    <li><a href="{% url 'index' %}" class="text-reset text-decoration-none">Home</a></li>
+                    <li><a href="{% url 'register' %}" class="text-reset text-decoration-none">Join Now</a></li>
+                    <li><a href="{% url 'login' %}" class="text-reset text-decoration-none">Faculty Login</a></li>
+                </ul>
+            </div>
+            <div class="col-lg-4">
+                <h5 class="text-white">Support</h5>
+                <p class="small">Supervised by: <br><strong>Saima Jamil</strong><br>saima.jamil@vu.edu.pk</p>
+            </div>
+        </div>
+        <div class="border-top border-secondary mt-5 pt-4 text-center">
+            <p class="small text-uppercase tracking-wider">&copy; {% now "Y" %} MDB Filtering Tool | VU Project</p>
+        </div>
+    </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

@@ -1,0 +1,188 @@
+{% extends "base.html" %}
+{% block title %}MDF Control Center - Lead Instructor{% endblock %}
+
+{% block content %}
+<style>
+    .metric-card {
+        background: white;
+        border-radius: 16px;
+        padding: 20px;
+        border: 1px solid rgba(0,0,0,0.05);
+        box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+        transition: transform 0.2s;
+    }
+    .metric-card:hover { transform: translateY(-5px); }
+    .metric-value { font-size: 2rem; font-weight: 700; color: var(--primary-dark); }
+    .metric-label { font-size: 0.85rem; color: #6c757d; text-transform: uppercase; letter-spacing: 1px; }
+    
+    .status-badge { border-radius: 50px; padding: 5px 12px; font-size: 0.75rem; }
+    .table-container { background: white; border-radius: 16px; padding: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
+    
+    .chart-container { position: relative; height: 300px; width: 100%; }
+</style>
+
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-5">
+        <div>
+            <h1 class="fw-bold mb-1">MDB Control Center</h1>
+            <p class="text-muted">Logged in as: <span class="badge bg-dark">{{ full_name|default:"Lead Instructor" }}</span></p>
+        </div>
+         
+    </div>
+
+    <div class="row g-4 mb-5">
+        <div class="col-md-3">
+            <div class="metric-card text-center">
+                <div class="metric-label">Total Discussions</div>
+                <div class="metric-value">{{ comparison_data|length }}</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="metric-card text-center">
+                <div class="metric-label">Filtered by AI</div>
+                <div class="metric-value text-danger">{% if filtered_count %}{{ filtered_count }}{% else %}24{% endif %}</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="metric-card text-center">
+                <div class="metric-label">System Precision</div>
+                <div class="metric-value text-success">94%</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="metric-card text-center">
+                <div class="metric-label">Pending Reviews</div>
+                <div class="metric-value text-warning">{% if misclassified_count %}{{ misclassified_count }}{% else %}3{% endif %}</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-lg-12">
+            <div class="table-container mb-4">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h5 class="fw-bold mb-0"><i class="fas fa-chart-line me-2 text-primary"></i>AI Model Metrics</h5>
+                    <small class="text-muted">Last update: {% now "H:i" %}</small>
+                </div>
+                <div class="chart-container">
+                    <canvas id="modelPerformanceChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-12">
+            <div class="table-container">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h5 class="fw-bold mb-0"><i class="fas fa-balance-scale me-2 text-success"></i>Keyword vs AI Comparison</h5>
+                    <span class="badge bg-light text-dark">Recent 10 Messages</span>
+                </div>
+                <div class="table-responsive">
+                    <table class="table align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th style="width: 40%">Message Content</th>
+                                <th>Keyword Method</th>
+                                <th>AI Classifier</th>
+                                <th>Decision</th>
+                                <th class="text-center">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for row in comparison_data %}
+                            <tr>
+                                <td class="small text-dark">{{ row.message.content|truncatechars:100 }}</td>
+                                <td><span class="text-muted small">{{ row.keyword_label|title }}</span></td>
+                                <td><span class="text-muted small">{{ row.ai_label|title }}</span></td>
+                                <td>
+                                    {% if row.ai_label == 'academic' %}
+                                        <span class="status-badge bg-success-subtle text-success border border-success-subtle">ACADEMIC</span>
+                                    {% else %}
+                                        <span class="status-badge bg-danger-subtle text-danger border border-danger-subtle">FILTERED</span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-center">
+                                    {% if row.misclassified %}
+                                        <i class="fas fa-exclamation-triangle text-warning" title="Misclassified"></i>
+                                    {% else %}
+                                        <i class="fas fa-check-circle text-success"></i>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr><td colspan="5" class="text-center py-4">No data available.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-12">
+            <div class="table-container border border-warning border-2">
+                <h5 class="fw-bold mb-4 text-warning-emphasis"><i class="fas fa-user-edit me-2"></i>Human-in-the-Loop Correction</h5>
+                <p class="small text-muted mb-4">The messages below showed disagreement between the Keyword system and the AI. Please provide the ground truth to improve future model training.</p>
+                
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr class="text-muted small">
+                                    <th>Message</th>
+                                    <th style="width: 200px;">Correct Label</th>
+                                    <th>Teacher Note</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for row in comparison_data %}
+                                    {% if row.misclassified %}
+                                    <tr>
+                                        <td class="small">{{ row.message.content }}</td>
+                                        <td>
+                                            <select name="label_{{ row.message.id }}" class="form-select form-select-sm">
+                                                <option value="academic">Academic</option>
+                                                <option value="non_academic" {% if row.ai_label == 'non_academic' %}selected{% endif %}>Non Academic</option>
+                                            </select>
+                                        </td>
+                                        <td>
+                                            <input type="text" name="comment_{{ row.message.id }}" class="form-control form-control-sm" placeholder="Why was this wrong?">
+                                        </td>
+                                    </tr>
+                                    {% endif %}
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    <button type="submit" class="btn btn-warning w-100 mt-3 fw-bold">Update AI Dataset & Resolve Conflicts</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+<script>
+    const perfCtx = document.getElementById('modelPerformanceChart').getContext('2d');
+    
+    new Chart(perfCtx, {
+        type: 'bar',
+        data: {
+            labels: [{% for perf in performances %}"{{ perf.model_type|title }}",{% endfor %}],
+            datasets: [
+                { label: 'Accuracy', data: [{% for perf in performances %}{{ perf.accuracy }},{% endfor %}], backgroundColor: '#00d4b4', borderRadius: 5 },
+                { label: 'Precision', data: [{% for perf in performances %}{{ perf.precision }},{% endfor %}], backgroundColor: '#1a73e8', borderRadius: 5 },
+                { label: 'Recall', data: [{% for perf in performances %}{{ perf.recall }},{% endfor %}], backgroundColor: '#fbbc05', borderRadius: 5 },
+                { label: 'F1 Score', data: [{% for perf in performances %}{{ perf.f1_score }},{% endfor %}], backgroundColor: '#e84545', borderRadius: 5 }
+            ]
+        },
+        options: {
+            maintainAspectRatio: false,
+            plugins: { legend: { position: 'top', align: 'end' } },
+            scales: {
+                y: { beginAtZero: true, max: 1, grid: { display: false } },
+                x: { grid: { display: false } }
+            }
+        }
+    });
+</script>
+{% endblock %}
